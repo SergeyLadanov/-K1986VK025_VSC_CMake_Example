@@ -1,17 +1,11 @@
 cmake_minimum_required(VERSION 3.21)
 
 
+set(APP_NAME "Milandr_Template")
+
 # Add you source file
 file(GLOB_RECURSE SOURCES
-    "src/*.c"
-    "src/*.cpp"
-    "MLDR187_SPL/*.c"
-    "src/startup_MLDR187.S"
-)
-
-# Add Include directories
-include_directories(
-    "MLDR187_SPL/inc"
+    "Core/src/startup_MLDR187.S"
 )
 
 
@@ -58,6 +52,15 @@ function(depends_on name)
 endfunction()
 
 
+function(all_dependencies)
+    if (COMPONENT_LIST)
+        foreach(item ${COMPONENT_LIST})
+            depends_on(${item})
+        endforeach()
+    endif()
+endfunction()
+
+
 function(register_component name)
     include_directories(Components/${name}/Inc)
     add_subdirectory(Components/${name})
@@ -87,7 +90,7 @@ set(SIZE riscv-none-embed-size)
 set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
  
 # Add you project name
-project(Milandr_Template C CXX ASM)
+project(${APP_NAME} C CXX ASM)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_STANDARD 11)
  
@@ -129,7 +132,7 @@ add_definitions(-DHXTAL_VALUE=25000000 -D__SYSTEM_CLOCK_108M_PLL_HXTAL=108000000
  
  
 # Add lincer file
-set(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/src/link_Flash.ld)
+set(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/Core/src/link_Flash.ld)
  
 # this options for C++
 add_link_options(-march=rv32imc -mabi=ilp32 -mcmodel=medany -msmall-data-limit=8 -mno-save-restore -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fno-move-loop-invariants -Wall -Wextra -g3)
@@ -147,6 +150,11 @@ add_executable(${PROJECT_NAME}.elf ${SOURCES} ${LINKER_SCRIPT})
 if (COMPONENT_LIST)
 add_components(${COMPONENT_LIST})
 endif()
+
+
+include_directories(Core/MLDR187_SPL/inc)
+add_subdirectory(Core)
+target_link_libraries(${PROJECT_NAME}.elf Core)		# Линковка программы с библиотекой
 
 # include_directories(
 #     "Submodule/Inc"
