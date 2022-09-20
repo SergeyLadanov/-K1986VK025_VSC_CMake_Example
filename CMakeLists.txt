@@ -25,15 +25,36 @@ include_directories(
 # ---Inc
 # ---Src 
 # ---CMakeLists.txt # add_library(Component2 ...
-set(COMPONENT_LIST
-    "Submodule"
-    "Submodule2"
-)
+
+
+MACRO(SUBDIRLIST result curdir)
+  FILE(GLOB children RELATIVE ${curdir} ${curdir}/*)
+  SET(dirlist "")
+  FOREACH(child ${children})
+    IF(IS_DIRECTORY ${curdir}/${child})
+      LIST(APPEND dirlist ${child})
+    ENDIF()
+  ENDFOREACH()
+  SET(${result} ${dirlist})
+ENDMACRO()
+
+
+
+SUBDIRLIST(COMPONENT_LIST ${CMAKE_CURRENT_SOURCE_DIR}/Components)
+
+# set(COMPONENT_LIST "")
+
+message("Components is \"${COMPONENT_LIST}\"")
+
+# set(COMPONENT_LIST
+#     "Submodule"
+#     "Submodule2"
+# )
 
 
 function(register_component name)
-    include_directories(${name}/Inc)
-    add_subdirectory(${name})
+    include_directories(Components/${name}/Inc)
+    add_subdirectory(Components/${name})
     target_link_libraries(${PROJECT_NAME}.elf ${name})		# Линковка программы с библиотекой
 endfunction()
 
@@ -116,7 +137,10 @@ add_link_options(--specs=nano.specs)
 
  
 add_executable(${PROJECT_NAME}.elf ${SOURCES} ${LINKER_SCRIPT})
+
+if (COMPONENT_LIST)
 add_components(${COMPONENT_LIST})
+endif()
 
 # include_directories(
 #     "Submodule/Inc"
