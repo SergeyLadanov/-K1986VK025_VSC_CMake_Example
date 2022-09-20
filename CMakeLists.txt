@@ -39,8 +39,9 @@ MACRO(SUBDIRLIST result curdir)
 ENDMACRO()
 
 
+set(COMPONENTS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Components)
 
-SUBDIRLIST(COMPONENT_LIST ${CMAKE_CURRENT_SOURCE_DIR}/Components)
+SUBDIRLIST(COMPONENT_LIST ${COMPONENTS_DIRECTORY})
 
 # set(COMPONENT_LIST "")
 
@@ -50,6 +51,11 @@ message("Components is \"${COMPONENT_LIST}\"")
 #     "Submodule"
 #     "Submodule2"
 # )
+
+function(depends_on name)
+    include_directories(${COMPONENTS_DIRECTORY}/${name}/Inc)
+    target_link_libraries(${PROJECT_NAME} ${name})		# Линковка программы с библиотекой
+endfunction()
 
 
 function(register_component name)

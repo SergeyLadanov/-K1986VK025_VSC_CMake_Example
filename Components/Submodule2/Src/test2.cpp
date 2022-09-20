@@ -1,6 +1,8 @@
+#include "test2.h"
 #include "test.h"
 
 char* TestPrint2(void)
 {
-    return (char* ) "test";
+    TestPrint();
+    return TestPrint();
 }
