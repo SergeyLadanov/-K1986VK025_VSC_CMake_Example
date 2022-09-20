@@ -1,15 +1,21 @@
-cmake_minimum_required(VERSION 3.21) # Проверка версии CMake.
-									# Если версия установленой программы
-									# старее указаной, произайдёт аварийный выход.
+cmake_minimum_required(VERSION 3.21)
 
-project(Submodule)				# Название проекта
+# Get current path
+set(path ${CMAKE_CURRENT_SOURCE_DIR})
+# Put directory name to COMPONENT_NAME variable
+cmake_path(GET path FILENAME COMPONENT_NAME)
+# Set component name
+project(${COMPONENT_NAME})
 
+# Add source files
 set(SOURCE_LIB 
     Src/test.cpp
-)		# Установка переменной со списком исходников
+)
 
+# Add includes
 include_directories(
     Inc
 )
 
-add_library(Submodule STATIC ${SOURCE_LIB})# Создание статической библиотеки
+# Creating static library
+add_library(${COMPONENT_NAME} STATIC ${SOURCE_LIB})
