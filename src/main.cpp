@@ -33,6 +33,8 @@
 #include "text.h"
 #include "Logo.h"
 #include "init.h"
+#include "test.h"
+#include "test2.h"
 
 /* Private typedef -----------------------------------------------------------*/
 
@@ -110,6 +112,8 @@ void SysTick_Handler(void)
 int32_t buf[N][2];
 uint32_t buf2[N][4];
 
+char *ptr;
+
 /* Main Function */
 int main()
 {
@@ -117,6 +121,8 @@ int main()
     init_clock();
     init_uart();
     init_ADC();
+    ptr = TestPrint();
+    ptr = TestPrint2();
 
     for (int i = 0; i < N; i++) {
         while (ADCUI_GetFlag(adcuiCh0, adcuiFlagVoltageFifoEmpty));

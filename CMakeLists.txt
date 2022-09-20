@@ -15,6 +15,37 @@ include_directories(
 )
 
 
+# Components structure:
+# -Components
+# --Component1
+# ---Inc
+# ---Src 
+# ---CMakeLists.txt # add_library(Component1 ...
+# --Component2
+# ---Inc
+# ---Src 
+# ---CMakeLists.txt # add_library(Component2 ...
+set(COMPONENT_LIST
+    "Submodule"
+    "Submodule2"
+)
+
+
+function(register_component name)
+    include_directories(${name}/Inc)
+    add_subdirectory(${name})
+    target_link_libraries(${PROJECT_NAME}.elf ${name})		# Линковка программы с библиотекой
+endfunction()
+
+
+function(add_components components_list_in)
+    set( _components_list ${components_list_in} ${ARGN} )
+    foreach(item ${_components_list})
+        register_component(${item})
+    endforeach()
+endfunction()
+
+
 set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_VERSION 1)
 
@@ -80,8 +111,25 @@ add_link_options(-nostartfiles -Xlinker --gc-sections)
 add_link_options(-Wl,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}.map)
 add_link_options(--specs=nano.specs)
 
+
+
+
  
 add_executable(${PROJECT_NAME}.elf ${SOURCES} ${LINKER_SCRIPT})
+add_components(${COMPONENT_LIST})
+
+# include_directories(
+#     "Submodule/Inc"
+# )
+# add_subdirectory(Submodule)
+# target_link_libraries(${PROJECT_NAME}.elf Submodule)		# Линковка программы с библиотекой
+
+# register_component(Submodule)
+# register_component(Submodule2)
+
+
+
+
  
 set(HEX_FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.hex)
 set(BIN_FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.bin)
