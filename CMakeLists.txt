@@ -59,15 +59,6 @@ function(depends_on name)
 endfunction()
 
 
-function(all_dependencies)
-    if (COMPONENT_LIST)
-        foreach(item ${COMPONENT_LIST})
-            depends_on(${item})
-        endforeach()
-    endif()
-endfunction()
-
-
 function(register_component name)
     include_directories(Components/${name}/Inc)
     add_subdirectory(Components/${name})
