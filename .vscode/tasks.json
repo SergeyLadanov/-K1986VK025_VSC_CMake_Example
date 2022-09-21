@@ -3,7 +3,7 @@
     "tasks": [
         {
             "type": "shell",
-            "label": "C/C++: Сборка проекта",
+            "label": "Build project",
             "command": "",
             "args": [
                 "cmake",

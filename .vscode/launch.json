@@ -1,0 +1,37 @@
+{
+    // Используйте IntelliSense, чтобы узнать о возможных атрибутах.
+    // Наведите указатель мыши, чтобы просмотреть описания существующих атрибутов.
+    // Для получения дополнительной информации посетите: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        // Конфигурация для локальной отладки
+        {
+            "name": "Cortex Debug",
+            "cwd": "${workspaceRoot}",
+            "executable": "./build/Milandr_Template.elf",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "openocd",
+            "svdFile": "svd/MLDR187_rev2.svd",
+            "runToMain": true,
+            "preLaunchTask": "Build project",
+            "configFiles": [
+                "${workspaceRoot}/MLDR187-ft2232hl.cfg"
+            ]
+        },
+
+        // Конфигурация для удаленной отладки
+        {
+            "name": "External GDB Server",
+            "cwd": "${workspaceRoot}",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "external",
+            "executable": "./build/Milandr_Template.elf",
+            "svdFile": "svd/MLDR187_rev2.svd",
+            "gdbTarget": "localhost:3333",
+            "runToMain": true,
+            "preLaunchTask": "Build project"
+        }
+    ]
+}
