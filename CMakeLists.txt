@@ -8,12 +8,12 @@ file(GLOB_RECURSE SOURCES
     "src/startup_MLDR187.S"
     "src/*.c"
     "src/*.cpp"
-    "MLDR187_SPL/src/*.c"
+    # "MLDR187_SPL/src/*.c"
 )
 
 
 include_directories(
-    "MLDR187_SPL/inc"
+    # "MLDR187_SPL/inc"
 )
 
 # Components structure:
