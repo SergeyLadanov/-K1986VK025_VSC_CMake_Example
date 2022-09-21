@@ -5,8 +5,8 @@
 		}
 	],
 	"settings": {
-		"cortex-debug.openocdPath": "D:/xpack-openocd-0.10.0-15/bin/openocd.exe",
-		"cortex-debug.armToolchainPath": "D:/xpack-riscv-none-embed-gcc-10.2.0-1.2/bin",
+		"cortex-debug.openocdPath": "${env:MILANDR_OPENOCD_PATH}/bin/openocd",
+		"cortex-debug.armToolchainPath": "${env:MILANDR_TOOLCHAIN_PATH}/bin",
 		"cortex-debug.armToolchainPrefix": "riscv-none-embed"
 	}
 }
