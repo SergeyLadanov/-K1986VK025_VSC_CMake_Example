@@ -5,20 +5,27 @@ set(APP_NAME "Milandr_Template")
 
 # Add you source file
 file(GLOB_RECURSE SOURCES
-    "Core/src/startup_MLDR187.S"
+    "src/startup_MLDR187.S"
+    "src/*.c"
+    "src/*.cpp"
+    "MLDR187_SPL/src/*.c"
 )
 
+
+include_directories(
+    "MLDR187_SPL/inc"
+)
 
 # Components structure:
 # -Components
 # --Component1
 # ---Inc
 # ---Src 
-# ---CMakeLists.txt # add_library(Component1 ...
+# ---CMakeLists.txt
 # --Component2
 # ---Inc
 # ---Src 
-# ---CMakeLists.txt # add_library(Component2 ...
+# ---CMakeLists.txt
 
 
 MACRO(SUBDIRLIST result curdir)
@@ -132,7 +139,7 @@ add_definitions(-DHXTAL_VALUE=25000000 -D__SYSTEM_CLOCK_108M_PLL_HXTAL=108000000
  
  
 # Add lincer file
-set(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/Core/src/link_Flash.ld)
+set(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/src/link_Flash.ld)
  
 # this options for C++
 add_link_options(-march=rv32imc -mabi=ilp32 -mcmodel=medany -msmall-data-limit=8 -mno-save-restore -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fno-move-loop-invariants -Wall -Wextra -g3)
@@ -151,19 +158,6 @@ if (COMPONENT_LIST)
 add_components(${COMPONENT_LIST})
 endif()
 
-
-include_directories(Core/MLDR187_SPL/inc)
-add_subdirectory(Core)
-target_link_libraries(${PROJECT_NAME}.elf Core)		# Линковка программы с библиотекой
-
-# include_directories(
-#     "Submodule/Inc"
-# )
-# add_subdirectory(Submodule)
-# target_link_libraries(${PROJECT_NAME}.elf Submodule)		# Линковка программы с библиотекой
-
-# register_component(Submodule)
-# register_component(Submodule2)
 
 
 
