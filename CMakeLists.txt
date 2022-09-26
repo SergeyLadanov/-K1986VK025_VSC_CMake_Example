@@ -11,23 +11,12 @@ file(GLOB_RECURSE SOURCES
 )
 
 
-include_directories(
+set(INCLUDE_LIST
 
 )
 
-# Components structure:
-# -Components
-# --Component1
-# ---Inc
-# ---Src 
-# ---CMakeLists.txt
-# --Component2
-# ---Inc
-# ---Src 
-# ---CMakeLists.txt
 
-
-macro(get_subdirlist result curdir)
+macro(__Get_DirectorytList result curdir)
   file(GLOB children RELATIVE ${curdir} ${curdir}/*)
   set(dirlist "")
   foreach(child ${children})
@@ -39,36 +28,65 @@ macro(get_subdirlist result curdir)
 endmacro()
 
 
+macro(__Get_IncludeDirectories result curdir)
+  file(GLOB_RECURSE children ${curdir}/*.h ${curdir}/*.hpp)
+  message("Adding include directories for \"${PROJECT_NAME}\"...")
+  set(dirlist "")
+  set(curItem "")
+  foreach(child ${children})
+
+    # Get current path
+    set(path ${child})
+    cmake_path(GET path PARENT_PATH newResult)
+
+    if (NOT curItem STREQUAL newResult)
+        message("Add \"${newResult}\" to icnlude directory list")
+        list(APPEND dirlist ${newResult})
+        set(curItem ${newResult})
+    endif()
+    
+  endforeach()
+  set(${result} ${dirlist})
+endmacro()
+
+
 set(COMPONENTS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Components)
 
-get_subdirlist(COMPONENT_LIST ${COMPONENTS_DIRECTORY})
+__Get_DirectorytList(COMPONENT_LIST ${COMPONENTS_DIRECTORY})
 
-# set(COMPONENT_LIST "")
+message("Project components: \"${COMPONENT_LIST}\"")
 
-message("Components is \"${COMPONENT_LIST}\"")
 
-# set(COMPONENT_LIST
-#     "Submodule"
-#     "Submodule2"
-# )
-
-function(depends_on name)
-    include_directories(${COMPONENTS_DIRECTORY}/${name}/Inc)
-    target_link_libraries(${PROJECT_NAME} ${name})		# Линковка программы с библиотекой
+function(Depends_On name)
+    message("Add dependency \"${name}\" for \"${PROJECT_NAME}\"")
+    set(dirs "")
+    __Get_IncludeDirectories(dirs ${COMPONENTS_DIRECTORY}/${name})
+    target_include_directories(${PROJECT_NAME} PRIVATE ${dirs})
+    target_link_libraries(${PROJECT_NAME} ${name})
 endfunction()
 
 
-function(register_component name)
-    include_directories(Components/${name}/Inc)
+function(Depends_All)
+    if (COMPONENT_LIST)
+        foreach(item ${COMPONENT_LIST})
+            Depends_On(${item})
+        endforeach()
+    endif()
+endfunction()
+
+
+function(__Register_Component name)
     add_subdirectory(Components/${name})
-    target_link_libraries(${PROJECT_NAME}.elf ${name})		# Линковка программы с библиотекой
+    get_property(inc_dirs DIRECTORY ${COMPONENTS_DIRECTORY}/${name} PROPERTY INCLUDE_DIRECTORIES)
+    target_include_directories(${PROJECT_NAME}.elf PRIVATE ${inc_dirs}) 
+    target_link_libraries(${PROJECT_NAME}.elf ${name})
 endfunction()
 
 
-function(add_components components_list_in)
+function(__Add_Components components_list_in)
     set( _components_list ${components_list_in} ${ARGN} )
     foreach(item ${_components_list})
-        register_component(${item})
+        __Register_Component(${item})
     endforeach()
 endfunction()
 
@@ -144,8 +162,13 @@ add_link_options(--specs=nano.specs)
  
 add_executable(${PROJECT_NAME}.elf ${SOURCES} ${LINKER_SCRIPT})
 
+# Директории с *.h файлами
+target_include_directories(${PROJECT_NAME}.elf PRIVATE
+    ${INCLUDE_LIST}
+)
+
 if (COMPONENT_LIST)
-add_components(${COMPONENT_LIST})
+    __Add_Components(${COMPONENT_LIST})
 endif()
 
 
