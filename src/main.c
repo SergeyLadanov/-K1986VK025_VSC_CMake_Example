@@ -16,7 +16,7 @@ static QueueHandle_t xQueue = NULL;
 void blink_task(void* arg) {
 	(void)arg;
     while (true) {
-        vTaskDelay(1);
+        vTaskDelay(1000);
         PORT_SetReset(LED_PORT, LED_PIN_0, !PORT_ReadPin(LED_PORT, LED_PIN_0));
     }
 }
@@ -24,7 +24,7 @@ void blink_task(void* arg) {
 void blink_task2(void* arg) {
 	(void)arg;
     while (true) {
-        vTaskDelay(15);
+        vTaskDelay(1500);
         PORT_SetReset(LED_PORT, LED_PIN_1, !PORT_ReadPin(LED_PORT, LED_PIN_1));
     }
 }

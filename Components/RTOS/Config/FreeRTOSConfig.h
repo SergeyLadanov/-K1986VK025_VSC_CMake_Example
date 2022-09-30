@@ -97,7 +97,7 @@
 #define configUSE_IDLE_HOOK				1
 #define configUSE_TICK_HOOK				1
 #if defined (MCU_REV2)
-    #define configCPU_CLOCK_HZ          ( 28E6 )                    /* The timer is clocked on rise of CLK_TIMER_PULSE signal ( HCLK/(DIV_SYS_TIM + 2) ) */
+    #define configCPU_CLOCK_HZ          ( 50E3 )                    /* The timer is clocked on rise of CLK_TIMER_PULSE signal ( HCLK/(DIV_SYS_TIM + 2) ) */
 #elif defined (MCU_REV1)
     #define configCPU_CLOCK_HZ          ( 2*RST_CLK_LSI_FREQUENCY ) /* The timer is clocked on rise and fall of LSE signal */
 #endif
