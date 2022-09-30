@@ -7,6 +7,9 @@
 	"settings": {
 		"cortex-debug.openocdPath": "${env:MILANDR_OPENOCD_PATH}/bin/openocd",
 		"cortex-debug.armToolchainPath": "${env:MILANDR_TOOLCHAIN_PATH}/bin",
-		"cortex-debug.armToolchainPrefix": "riscv-none-embed"
+		"cortex-debug.armToolchainPrefix": "riscv-none-embed",
+		"files.associations": {
+			"portable.h": "c"
+		}
 	}
 }

@@ -7,20 +7,16 @@
 
 #include <MLDR187_lib.h>
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+#define	LED_PORT 		MDR_PORTD
+#define LED_PIN_0		PORT_Pin_0
+#define LED_PIN_1		PORT_Pin_1
 
 void init_clock();
 
 void init_uart();
 
-void init_ADC();
+void init_bkp();
 
-
-#ifdef __cplusplus
-}
-#endif
+void init_leds();
 
 #endif //USE_INIT_H

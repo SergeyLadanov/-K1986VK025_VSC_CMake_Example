@@ -8,6 +8,7 @@
 #include <MLDR187_uart.h>
 #include <MLDR187_gpio.h>
 #include <MLDR187_adcui.h>
+#include <MLDR187_bkp.h>
 
 
 void init_clock()
@@ -58,14 +59,24 @@ void init_uart()
     UART_Cmd(MDR_UART1, ENABLE);
 }
 
-void init_ADC() {
-    ADCUI_InitTypeDef initStruct;
-    ADCUI_StructInitDefault(&initStruct);
-    ADCUI_Init(&initStruct);
+void init_bkp() {
+    RST_CLK_EnablePeripheralClock(RST_CLK_BKP, RST_CLK_Div1);
+    BKP_FreqGenCmd(bkpLse, ENABLE, ENABLE);
 
-    ADCUI_CH_InitTypeDef chInitStruct = {
-            .IEnInt     = DISABLE
-    };
+    BKP_InitTypeDef bkpInit;
+    BKP_StructInitDefault(&bkpInit);
+    bkpInit.RTCsrc = bkpRtc_LSE;
+    BKP_Init(&bkpInit);
+}
 
-    ADCUI_InitChannel(adcuiCh0 ,&chInitStruct);
+void init_leds() {
+    PORT_InitTypeDef PORT_InitStructure;
+    PORT_InitStructure.PORT_OE    = PORT_OE_OUT;
+    PORT_InitStructure.PORT_FUNC  = PORT_FUNC_PORT;
+    PORT_InitStructure.PORT_MODE  = PORT_MODE_DIGITAL;
+    PORT_InitStructure.PORT_SPEED = PORT_SPEED_SLOW_4mA;
+    PORT_InitStructure.PORT_PULL_DOWN   = PORT_PULL_DOWN_OFF;
+    PORT_Init(LED_PORT, (LED_PIN_0 | LED_PIN_1), &PORT_InitStructure);
+    PORT_SetReset(LED_PORT, LED_PIN_0, SET);
+    PORT_SetReset(LED_PORT, LED_PIN_1, SET);
 }
