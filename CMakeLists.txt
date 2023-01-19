@@ -105,7 +105,7 @@ endfunction()
 # Указать зависимость от главного приложения
 function(Depends_On_Main)
     message("Handle dependency \"Main app\" for \"${PROJECT_NAME}\"")
-    target_include_directories(${PROJECT_NAME} PUBLIC ${Project_Path}/${Includes})
+    target_include_directories(${PROJECT_NAME} PUBLIC ${Project_Path}/${INCLUDE_LIST})
     Depends_All()
 endfunction()
 
