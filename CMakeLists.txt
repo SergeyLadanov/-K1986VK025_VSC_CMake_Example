@@ -15,6 +15,9 @@ set(INCLUDE_LIST
 
 )
 
+# Путь к проекту
+set(Project_Path ${CMAKE_CURRENT_SOURCE_DIR})
+
 
 macro(__Get_DirectorytList result curdir)
   file(GLOB children RELATIVE ${curdir} ${curdir}/*)
@@ -29,24 +32,33 @@ endmacro()
 
 
 macro(__Get_IncludeDirectories result curdir)
-  file(GLOB_RECURSE children ${curdir}/*.h ${curdir}/*.hpp)
-  message("Adding include directories for \"${PROJECT_NAME}\"...")
-  set(dirlist "")
-  set(curItem "")
-  foreach(child ${children})
-
-    # Get current path
-    set(path ${child})
-    cmake_path(GET path PARENT_PATH newResult)
-
-    if (NOT curItem STREQUAL newResult)
-        message("Add \"${newResult}\" to icnlude directory list")
-        list(APPEND dirlist ${newResult})
-        set(curItem ${newResult})
-    endif()
+    set(dirlist "")
+    message("Adding include directories from dependency \"${curdir}\" to \"${PROJECT_NAME}\"...")
+    file(READ ${curdir}/CMakeLists.txt text)
+    # Find include directories call
+    string(REGEX MATCHALL "[I,i][n,N][c,C][l,L][u,U][d,D][e,E]_[d,D][i,I][r,R][e,E][c,C][t,T][o,O][r,R][i,I][e,E][s,S]\\([^\\(]*\\)" out_var ${text})
+    # Remove key word "include_directories"
+    string(REGEX REPLACE "[I,i][n,N][c,C][l,L][u,U][d,D][e,E]_[d,D][i,I][r,R][e,E][c,C][t,T][o,O][r,R][i,I][e,E][s,S]" "" out_var "${out_var}")
+    # Remove brackets and spaces"
+    string(REGEX REPLACE "\\([\r\n\t ]*|[\r\n\t ]*\\)" "" out_var "${out_var}")
+    # Remove quotes
+    string(REGEX REPLACE "\"" "" out_var "${out_var}")
+    # Convert to list
+    string(REGEX REPLACE "[\r,\n,\t, ][\r\n\t ]*" ";" out_var "${out_var}")
     
-  endforeach()
-  set(${result} ${dirlist})
+    foreach(item ${out_var})
+        # set(item ${curdir}/${item})
+        list(APPEND dirlist ${curdir}/${item})
+    endforeach()
+
+    set(${result} ${dirlist})
+endmacro()
+
+
+# Получение списка файлов с исходным кодом
+macro(__Get_SourceFiles result curdir)
+    file(GLOB_RECURSE temp ${curdir}/*.c ${curdir}/*.cpp)
+    set(${result} ${temp})
 endmacro()
 
 
@@ -57,12 +69,27 @@ __Get_DirectorytList(COMPONENT_LIST ${COMPONENTS_DIRECTORY})
 message("Project components: \"${COMPONENT_LIST}\"")
 
 
+# Указать имя зависимости для компонента
 function(Depends_On name)
-    message("Add dependency \"${name}\" for \"${PROJECT_NAME}\"")
+    message("Handle dependency \"${name}\" for \"${PROJECT_NAME}\"")
     set(dirs "")
-    __Get_IncludeDirectories(dirs ${COMPONENTS_DIRECTORY}/${name})
-    target_include_directories(${PROJECT_NAME} PRIVATE ${dirs})
-    target_link_libraries(${PROJECT_NAME} ${name})
+
+    # Get current path
+    set(path ${CMAKE_CURRENT_SOURCE_DIR})
+    # Put directory name to COMPONENT_NAME variable
+    cmake_path(GET path FILENAME COMPONENT_NAME)
+
+    if (NOT ${COMPONENT_NAME} STREQUAL ${name})
+        message("Test")
+        __Get_IncludeDirectories(dirs ${COMPONENTS_DIRECTORY}/${name})
+        __Get_SourceFiles(src_files ${COMPONENTS_DIRECTORY}/${name})
+        target_include_directories(${PROJECT_NAME} PRIVATE ${dirs})
+
+        if (src_files)
+            target_link_libraries(${PROJECT_NAME} ${name})
+        endif()
+    endif()
+
 endfunction()
 
 
@@ -72,6 +99,14 @@ function(Depends_All)
             Depends_On(${item})
         endforeach()
     endif()
+endfunction()
+
+
+# Указать зависимость от главного приложения
+function(Depends_On_Main)
+    message("Handle dependency \"Main app\" for \"${PROJECT_NAME}\"")
+    target_include_directories(${PROJECT_NAME} PUBLIC ${Project_Path}/${Includes})
+    Depends_All()
 endfunction()
 
 
