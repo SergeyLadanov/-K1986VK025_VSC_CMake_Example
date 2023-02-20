@@ -8,6 +8,8 @@ set(Project_Path ${CMAKE_CURRENT_SOURCE_DIR})
 # Получение списка каталогов для заголовочных файлов исходного проекта
 get_target_property(MainIncludes ${PROJECT_NAME} INCLUDE_DIRECTORIES)
 
+# Вспомогательная переменная для сканирования вложенных зависимотсей компонентов
+set(__dependency_tree "")
 
 # Получение списка компонентов в заданном каталоге
 macro(__Get_DirectorytList result curdir)
@@ -50,10 +52,44 @@ macro(__Get_IncludeDirectories result curdir)
 endmacro()
 
 
+
+
+
+# Получение списка каталогов с заголовочными файлами в заданной директории
+macro(__Get_Dependencies result curdir)
+    set(dirlist "")
+    message("Adding dependency from \"${curdir}\" to \"${PROJECT_NAME}\"...")
+    file(READ ${curdir}/CMakeLists.txt text)
+    # Find include directories call
+    string(REGEX MATCHALL "[D,d][e,E][p,P][e,N][n,N][d,D][s,S]_[o,O][n,N]\\([^\\(]*\\)" out_var ${text})
+    # Remove key word "include_directories"
+    string(REGEX REPLACE "[D,d][e,E][p,P][e,N][n,N][d,D][s,S]_[o,O][n,N]" "" out_var "${out_var}")
+    # Remove brackets and spaces"
+    string(REGEX REPLACE "\\([\r\n\t ]*|[\r\n\t ]*\\)" "" out_var "${out_var}")
+    # Remove quotes
+    string(REGEX REPLACE "\"" "" out_var "${out_var}")
+    # Convert to list
+    string(REGEX REPLACE "[\r,\n,\t, ][\r\n\t ]*" ";" out_var "${out_var}")
+    
+    foreach(item ${out_var})
+        # set(item ${curdir}/${item})
+        list(APPEND dirlist ${item})
+    endforeach()
+
+    set(${result} ${dirlist})
+endmacro()
+
+
 # Получение списка файлов с исходным кодом
-macro(__Get_SourceFiles result curdir)
-    file(GLOB_RECURSE temp ${curdir}/*.c ${curdir}/*.cpp)
-    set(${result} ${temp})
+macro(__SourceFilesPresent result curdir)
+    file(READ ${curdir}/CMakeLists.txt text)
+    string(REGEX MATCHALL "[a,A][d,D][d,D]_[l,L][i,I][b,B][r,R][a,A][r,R][y,Y]" out_var ${text})
+    if (out_var)
+        set(${result} "True")
+    else()
+        set(${result} "")
+    endif()
+    
 endmacro()
 
 # Получение списка компонентов проекта
@@ -61,8 +97,30 @@ __Get_DirectorytList(COMPONENT_LIST ${COMPONENTS_DIRECTORY})
 
 message("Project components: \"${COMPONENT_LIST}\"")
 
-# Указать имя зависимости для компонента
-function(Depends_On name)
+
+#-----------------------------------------------
+# Обработка дерева зависимостей
+macro(__HandleDependencyTree name)
+
+    list(FIND __dependency_tree ${name} res)
+
+    if (res GREATER -1)
+        message(STATUS "Dependency \"${name}\" already included") 
+    else()
+        list(APPEND __dependency_tree ${name})
+        __Get_Dependencies(res ${COMPONENTS_DIRECTORY}/${name})
+
+        foreach(item ${res})
+            __HandleDependencyTree(${item})
+        endforeach()
+    
+    endif()
+    
+endmacro()
+
+
+# Указать имя зависимость для компонента
+function(__Depends_On name)
     message("Handle dependency \"${name}\" for \"${PROJECT_NAME}\"")
     set(dirs "")
 
@@ -70,9 +128,8 @@ function(Depends_On name)
     get_filename_component(COMPONENT_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
     if (NOT ${COMPONENT_NAME} STREQUAL ${name})
-        message("Test")
         __Get_IncludeDirectories(dirs ${COMPONENTS_DIRECTORY}/${name})
-        __Get_SourceFiles(src_files ${COMPONENTS_DIRECTORY}/${name})
+        __SourceFilesPresent(src_files ${COMPONENTS_DIRECTORY}/${name})
         target_include_directories(${PROJECT_NAME} PRIVATE ${dirs})
 
         if (src_files)
@@ -81,6 +138,28 @@ function(Depends_On name)
     endif()
 
 endfunction()
+
+
+# Указать список заивисимостей от других компнентов
+macro( Depends_On )
+    set( _OPTIONS_ARGS )
+    set( _ONE_VALUE_ARGS )
+    set(__dependency_tree "")
+
+    cmake_parse_arguments(_ARGUMENTS "${_OPTIONS_ARGS}" "${_ONE_VALUE_ARGS}"  ${ARGN} )
+
+    foreach(item ${ARGN})
+        __HandleDependencyTree(${item})
+    endforeach()
+
+    message(STATUS "Final dependency tree for ${CMAKE_CURRENT_SOURCE_DIR}: ${__dependency_tree}")
+
+
+    foreach(item ${__dependency_tree})
+        __Depends_On(${item})
+    endforeach()
+
+endmacro()
 
 # Указать зависимость от главного приложения
 function(Depends_On_Main)
@@ -93,7 +172,7 @@ endfunction()
 function(Depends_All)
     if (COMPONENT_LIST)
         foreach(item ${COMPONENT_LIST})
-            Depends_On(${item})
+            __Depends_On(${item})
         endforeach()
     endif()
 endfunction()
@@ -102,7 +181,7 @@ endfunction()
 function(__Register_Component name)
     add_subdirectory(Components/${name})
     get_property(inc_dirs DIRECTORY ${COMPONENTS_DIRECTORY}/${name} PROPERTY INCLUDE_DIRECTORIES)
-    __Get_SourceFiles(src_files ${COMPONENTS_DIRECTORY}/${name})
+    __SourceFilesPresent(src_files ${COMPONENTS_DIRECTORY}/${name})
 
     target_include_directories(${PROJECT_NAME} PRIVATE ${inc_dirs})
 
